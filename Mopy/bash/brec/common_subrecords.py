@@ -190,8 +190,6 @@ class MelCtda(MelUnion):
     def getSlotsUsed(self): # PY3: unpack
         return (self.decider_result_attr,) + self._ctda_mel.getSlotsUsed()
 
-    def setDefault(self, record):
-        next(self.element_mapping.itervalues()).setDefault(record)
 
 class MelCtdaFo3(MelCtda):
     """Version of MelCtda that handles the additional complexities that were
@@ -410,7 +408,7 @@ class MelPickupSound(MelFid):
         super(MelPickupSound, self).__init__(b'YNAM', u'pickupSound')
 
 #------------------------------------------------------------------------------
-class MelRaceParts(MelNull):
+class MelRaceParts(MelBase):
     """Handles a subrecord array, where each subrecord is introduced by an
     INDX subrecord, which determines the meaning of the subrecord. The
     resulting attributes are set directly on the record.
@@ -448,9 +446,9 @@ class MelRaceParts(MelNull):
     def getSlotsUsed(self):
         return tuple(self._indx_to_attr.itervalues())
 
-    def setDefault(self, record):
+    def getDefaulters(self, mel_set_instance):
         for element in self._indx_to_loader.itervalues():
-            element.setDefault(record)
+            element.getDefaulters(mel_set_instance)
 
     def load_mel(self, record, ins, sub_type, size_, *debug_strs):
         __unpacker=_int_unpacker # PY3: keyword only search for __unpacker
@@ -462,7 +460,7 @@ class MelRaceParts(MelNull):
 
     def dumpData(self, record, out):
         for part_indx, part_attr in self._indx_to_attr.iteritems():
-            if hasattr(record, part_attr): # only dump present parts
+            if getattr(record, part_attr) is not None: #only dump present parts
                 MelUInt32(b'INDX', u'UNUSED').packSub(
                     out, struct_pack(u'=I', part_indx))
                 self._indx_to_loader[part_indx].dumpData(record, out)
@@ -537,9 +535,6 @@ class MelMODS(MelBase):
     """MODS/MO2S/etc/DMDS subrecord"""
     def hasFids(self,formElements):
         formElements.add(self)
-
-    def setDefault(self,record):
-        setattr(record, self.attr, None)
 
     def load_mel(self, record, ins, sub_type, size_, *debug_strs):
         __unpacker=_int_unpacker
