@@ -31,7 +31,7 @@ from ...bolt import Flags, struct_calcsize
 from ...brec import MelModel # set in Mopy/bash/game/fallout3/records.py
 from ...brec import MelRecord, MelGroups, MelStruct, FID, MelGroup, \
     MelString, MelSet, MelFid, MelOptStruct, MelFids, MelBase, \
-    MelFidList, MreGmstBase, MreHeaderBase, MelColorInterpolator, \
+    MreGmstBase, MreHeaderBase, MelColorInterpolator, \
     MelValueInterpolator, MelRegnEntrySubrecord, MelFloat, MelSInt8, \
     MelSInt16, MelSInt32, MelUInt8, MelUInt32, \
     MelUInt16, MelBounds, null1, \
@@ -58,7 +58,7 @@ class MreTes4(MreHeaderBase):
         MreHeaderBase.MelAuthor(),
         MreHeaderBase.MelDescription(),
         MreHeaderBase.MelMasterNames(),
-        MelFidList(b'ONAM','overrides'),
+        MelArray(u'overrides', MelFid(b'ONAM')),
         MelBase(b'SCRN', 'screenshot'),
     )
     __slots__ = melSet.getSlotsUsed()
@@ -405,7 +405,7 @@ class MreCell(MelRecord):
         MelUInt32Flags(b'LNAM', u'lightInheritFlags', inheritFlags),
         MelFloat(b'XCLW', u'waterHeight'),
         MelString(b'XNAM','waterNoiseTexture'),
-        MelFidList(b'XCLR','regions'),
+        MelArray(u'regions', MelFid(b'XCLR')),
         MelUInt8(b'XCMT', 'xcmt_p'),
         MelFid(b'XCIM','imageSpace'),
         MelUInt8(b'XCET', 'xcet_p'),
@@ -1376,7 +1376,7 @@ class MreRegn(MelRecord):
                 MelStruct(b'RDWT', [u'3I'], (FID, u'weather'), u'chance',
                           (FID, u'global')),
             )),
-            MelRegnEntrySubrecord(8, MelFidList(b'RDID', 'imposters')),
+            MelRegnEntrySubrecord(8, MelArray(u'imposters', MelFid(b'RDID'))),
         ),
     )
     __slots__ = melSet.getSlotsUsed()

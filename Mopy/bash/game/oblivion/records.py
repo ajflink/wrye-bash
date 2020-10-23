@@ -31,7 +31,7 @@ from ... import brec
 from ...bolt import Flags
 from ...brec import MelRecord, MelGroups, MelStruct, FID, MelGroup, \
     MelString, MreLeveledListBase, MelSet, MelFid, MelNull, MelOptStruct, \
-    MelFids, MreHeaderBase, MelBase, MelFidList, MelStrings, \
+    MelFids, MreHeaderBase, MelBase, MelStrings, \
     MreGmstBase, MelReferences, MelRegnEntrySubrecord, \
     MelFloat, MelSInt16, MelSInt32, MelUInt8, MelUInt16, MelUInt32, \
     MelRaceParts, MelRaceVoices, null1, null2, MelScriptVars, \
@@ -647,7 +647,7 @@ class MreCell(MelRecord):
             u'unused2', u'fogRed', u'fogGreen', u'fogBlue',
             u'unused3', u'fogNear', u'fogFar', u'directionalXY',
             u'directionalZ', (u'directionalFade', 1.0), u'fogClip'),
-        MelFidList(b'XCLR', u'regions'),
+        MelArray(u'regions', MelFid(b'XCLR')),
         MelUInt8(b'XCMT', u'music'),
         MelFloat(b'XCLW', u'waterHeight'),
         MelFid(b'XCCM', u'climate'),
@@ -1605,8 +1605,8 @@ class MreRace(MelRecord):
             4: u'femaleTailPath',
         }, group_loaders=lambda _indx: (MelIcon(),)),
         # Normal Entries
-        MelFidList(b'HNAM','hairs'),
-        MelFidList(b'ENAM','eyes'),
+        MelArray(u'hairs', MelFid(b'HNAM')),
+        MelArray(u'eyes', MelFid(b'ENAM')),
         MelBase(b'FGGS','fggs_p'), ####FaceGen Geometry-Symmetric
         MelBase(b'FGGA','fgga_p'), ####FaceGen Geometry-Asymmetric
         MelBase(b'FGTS','fgts_p'), ####FaceGen Texture-Symmetric
@@ -1942,7 +1942,7 @@ class MreWatr(MelRecord):
             ('dispDampner', 10.0000), ('dispSize', 0.0500), 'damage',
             old_versions={'11f3Bs3Bs3BsB3s6f2s', '11f3Bs3Bs3BsB3s2s',
                           '10f2s', '2s'}),
-        MelFidList(b'GNAM','relatedWaters'),
+        MelArray(u'relatedWaters', MelFid(b'GNAM')),
     )
     __slots__ = melSet.getSlotsUsed()
 
