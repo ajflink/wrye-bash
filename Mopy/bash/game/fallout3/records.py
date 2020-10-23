@@ -29,7 +29,7 @@ from collections import OrderedDict
 from ... import brec
 from ...bolt import Flags, structs_cache
 from ...brec import MelRecord, MelGroups, MelStruct, FID, MelGroup, \
-    MelString, MelSet, MelFid, MelOptStruct, MelFids, MreHeaderBase, \
+    MelString, MelSet, MelFid, MelOptStruct, MreHeaderBase, \
     MelBase, MreGmstBase, MelStrings, MelMODS, \
     MelReferences, MelColorInterpolator, MelValueInterpolator, \
     MelUnion, AttrValDecider, MelRegnEntrySubrecord, SizeDecider, MelFloat, \
@@ -851,7 +851,7 @@ class MreCpth(MelRecord):
         MelConditions(),
         MelArray(u'relatedCameraPaths', MelFid(b'ANAM')),
         MelUInt8(b'DATA', 'cameraZoom'),
-        MelFids(b'SNAM','cameraShots',),
+        MelGroups(u'cameraShots', MelFid(b'SNAM')),
     )
     __slots__ = melSet.getSlotsUsed()
 
@@ -934,7 +934,7 @@ class MreCrea(MreActor):
                   'unused_aidt', (aiService, u'services'),
                   ('trainSkill', -1), 'trainLevel', 'assistance',
                   (aggroflags, u'aggroRadiusBehavior'), 'aggroRadius'),
-        MelFids(b'PKID','aiPackages'),
+        MelGroups(u'aiPackages', MelFid(b'PKID')),
         MelStrings(b'KFFZ','animations'),
         MelStruct(b'DATA', [u'4B', u'h', u'2s', u'h', u'7B'],'creatureType','combatSkill','magicSkill',
             'stealthSkill','health','unused2','damage','strength',
@@ -1026,8 +1026,8 @@ class MreDial(MelRecord):
 
     melSet = MelSet(
         MelEdid(),
-        MelFids(b'QSTI','quests'),
-        MelFids(b'QSTR','rQuests'),
+        MelGroups(u'quests', MelFid(b'QSTI')),
+        MelGroups(u'rQuests', MelFid(b'QSTR')),
         MelFull(),
         MelFloat(b'PNAM', 'priority'),
         MelTruncatedStruct(b'DATA', [u'2B'], 'dialType',
@@ -1315,7 +1315,7 @@ class MreHdpt(MelRecord):
         MelFull(),
         MelModel(),
         MelUInt8Flags(b'DATA', u'flags', _flags),
-        MelFids(b'HNAM','extraParts'),
+        MelGroups(u'extraParts', MelFid(b'HNAM')),
     )
     __slots__ = melSet.getSlotsUsed()
 
@@ -1519,7 +1519,7 @@ class MreInfo(MelRecord):
         MelFid(b'QSTI', u'info_quest'),
         MelFid(b'TPIC', u'info_topic'),
         MelFid(b'PNAM','prevInfo'),
-        MelFids(b'NAME','addTopics'),
+        MelGroups(u'addTopics', MelFid(b'NAME')),
         MelGroups('responses',
             MelStruct(b'TRDT', [u'I', u'i', u'4s', u'B', u'3s', u'I', u'B', u'3s'],'emotionType','emotionValue','unused1','responseNum',('unused2',b'\xcd\xcd\xcd'),
                       (FID,'sound'),'flags',('unused3',b'\xcd\xcd\xcd')),
@@ -1530,8 +1530,8 @@ class MreInfo(MelRecord):
             MelFid(b'LNAM','listenerAnimation'),
         ),
         MelConditions(),
-        MelFids(b'TCLT','choices'),
-        MelFids(b'TCLF','linksFrom'),
+        MelGroups(u'choices', MelFid(b'TCLT')),
+        MelGroups(u'linksFrom', MelFid(b'TCLF')),
         MelGroup('scriptBegin',
             MelEmbeddedScript(),
         ),
@@ -1687,7 +1687,7 @@ class MreLtex(MelRecord):
         MelFid(b'TNAM', 'texture'),
         MelOptStruct(b'HNAM', [u'3B'],'materialType','friction','restitution'),
         MelUInt8(b'SNAM', 'specular'),
-        MelFids(b'GNAM', 'grass'),
+        MelGroups(u'grass', MelFid(b'GNAM')),
     )
     __slots__ = melSet.getSlotsUsed()
 
@@ -2002,14 +2002,14 @@ class MreNpc(MreActor):
                   'unused_aidt',(aiService, u'services'),
                   ('trainSkill', -1), 'trainLevel', 'assistance',
                   (aggroflags, u'aggroRadiusBehavior'), 'aggroRadius'),
-        MelFids(b'PKID','aiPackages'),
+        MelGroups(u'aiPackages', MelFid(b'PKID')),
         MelStrings(b'KFFZ','animations'),
         MelFid(b'CNAM','iclass'),
         MelUnion({
             11: _MelNpcData([u'I', u'7B']),
             25: _MelNpcData([u'I', u'21B'])
         }, decider=SizeDecider()),
-        MelFids(b'PNAM','headParts'),
+        MelGroups(u'headParts', MelFid(b'PNAM')),
         MelNpcDnam(b'DNAM', [u'28B'], (u'skillValues', [0] * 14),
                    (u'skillOffsets', [0] * 14)),
         MelFid(b'HNAM','hair'),
@@ -2631,7 +2631,7 @@ class MreRefr(MelRecord):
             MelStruct(b'XPWR', [u'2I'], (FID, 'reference'),
                       (reflectFlags, 'reflection_type')),
         ),
-        MelFids(b'XLTW','litWaters'),
+        MelGroups(u'litWaters', MelFid(b'XLTW')),
         MelGroups('linkedDecals',
             MelStruct(b'XDCR', [u'2I'], (FID, 'reference'), 'unknown'),
         ),
@@ -2654,7 +2654,7 @@ class MreRefr(MelRecord):
         ####if it's 4 byte it's the seed value directly.
         MelGroup('roomData',
             MelStruct(b'XRMR', [u'H', u'2s'],'linkedRoomsCount','unknown'),
-            MelFids(b'XLRM','linkedRoom'),
+            MelGroups(u'linkedRoom', MelFid(b'XLRM')),
         ),
         MelOptStruct(b'XOCP', [u'9f'],'occlusionPlaneWidth','occlusionPlaneHeight','occlusionPlanePosX','occlusionPlanePosY','occlusionPlanePosZ',
                      'occlusionPlaneRot1','occlusionPlaneRot2','occlusionPlaneRot3','occlusionPlaneRot4'),

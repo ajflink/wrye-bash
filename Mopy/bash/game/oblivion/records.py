@@ -31,7 +31,7 @@ from ... import brec
 from ...bolt import Flags
 from ...brec import MelRecord, MelGroups, MelStruct, FID, MelGroup, \
     MelString, MreLeveledListBase, MelSet, MelFid, MelNull, MelOptStruct, \
-    MelFids, MreHeaderBase, MelBase, MelStrings, \
+    MreHeaderBase, MelBase, MelStrings, \
     MreGmstBase, MelReferences, MelRegnEntrySubrecord, \
     MelFloat, MelSInt16, MelSInt32, MelUInt8, MelUInt16, MelUInt32, \
     MelRaceParts, MelRaceVoices, null1, null2, MelScriptVars, \
@@ -814,7 +814,7 @@ class MreCrea(MreActorBase):
             ('aggression',5),('confidence',50),('energyLevel',50),
             ('responsibility',50),(aiService, u'services'),'trainSkill',
             'trainLevel','unused1'),
-        MelFids(b'PKID','aiPackages'),
+        MelGroups(u'aiPackages', MelFid(b'PKID')),
         MelStrings(b'KFFZ','animations'),
         MelStruct(b'DATA', [u'5B', u's', u'H', u'2s', u'H', u'8B'],'creatureType','combatSkill','magic',
                   'stealth','soul','unused2','health',
@@ -894,8 +894,8 @@ class MreDial(MelRecord):
 
     melSet = MelSet(
         MelEdid(),
-        MelFids(b'QSTI', u'quests'),
-        MelFids(b'QSTR', u'quests2'), # xEdit calls it 'Quests?'
+        MelGroups(u'quests', MelFid(b'QSTI')),
+        MelArray(u'quests2', MelFid(b'QSTR')), # xEdit calls it 'Quests?'
         MelFull(),
         MelUInt8(b'DATA', u'dialType'),
     )
@@ -917,7 +917,7 @@ class MreDoor(MelRecord):
         MelFid(b'ANAM','soundClose'),
         MelFid(b'BNAM','soundLoop'),
         MelUInt8Flags(b'FNAM', u'flags', _flags),
-        MelFids(b'TNAM','destinations'),
+        MelGroups(u'destinations', MelFid(b'TNAM')),
     )
     __slots__ = melSet.getSlotsUsed()
 
@@ -1108,7 +1108,7 @@ class MreInfo(MelRecord):
         MelFid(b'QSTI', u'info_quest'),
         MelFid(b'TPIC', u'info_topic'),
         MelFid(b'PNAM', u'prevInfo'),
-        MelFids(b'NAME', u'addTopics'),
+        MelGroups(u'addTopics', MelFid(b'NAME')),
         MelGroups(u'responses',
             MelStruct(b'TRDT', [u'I', u'i', u'4s', u'B', u'3s'], u'emotionType', u'emotionValue',
                 u'unused1', u'responseNum', u'unused2'),
@@ -1116,8 +1116,8 @@ class MreInfo(MelRecord):
             MelString(b'NAM2', u'actorNotes'),
         ),
         MelConditions(),
-        MelFids(b'TCLT', u'choices'),
-        MelFids(b'TCLF', u'linksFrom'),
+        MelGroups(u'choices', MelFid(b'TCLT')),
+        MelGroups(u'linksFrom', MelFid(b'TCLF')),
         MelEmbeddedScript(),
     )
     __slots__ = melSet.getSlotsUsed()
@@ -1222,7 +1222,7 @@ class MreLtex(MelRecord):
         MelOptStruct(b'HNAM', [u'3B'], (_flags, 'flags'), 'friction',
                      'restitution'), ##: flags are actually an enum....
         MelUInt8(b'SNAM', 'specular'),
-        MelFids(b'GNAM', 'grass'),
+        MelGroups(u'grass', MelFid(b'GNAM')),
     )
     __slots__ = melSet.getSlotsUsed()
 
@@ -1381,11 +1381,11 @@ class MreNpc(MreActorBase):
         MelSpells(),
         MelScript(),
         MelItems(),
-        MelStruct(b'AIDT', [u'4B', u'I', u'b', u'B', u'2s'], ('aggression', 5), ('confidence', 50),
-                  ('energyLevel', 50), ('responsibility', 50),
-                  (aiService, u'services'), 'trainSkill', 'trainLevel',
-                  'unused1'),
-        MelFids(b'PKID','aiPackages'),
+        MelStruct(b'AIDT', [u'4B', u'I', u'b', u'B', u'2s'], ('aggression', 5),
+                  ('confidence', 50), ('energyLevel', 50),
+                  ('responsibility', 50), (aiService, u'services'),
+                  'trainSkill', 'trainLevel', 'unused1'),
+        MelGroups(u'aiPackages', MelFid(b'PKID')),
         MelStrings(b'KFFZ','animations'),
         MelFid(b'CNAM','iclass'),
         MelNpcData(b'DATA', [u'21B', u'H', u'2s', u'8B'],
