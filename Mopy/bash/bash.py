@@ -412,7 +412,7 @@ def _main(opts, wx_locale):
         settings_file = (opts.backup and opts.filename) or None
         if not settings_file:
             bak_f = barb.BackupSettings.backup_filename(bush_game.displayName)
-            settings_file = balt.askSave(
+            settings_file = gui.FileSave.display_dialog(
                 frame, title=_(u'Backup Bash Settings'), defaultDir=base_dir,
                 wildcard=u'*.7z', defaultFile=bak_f)
         if settings_file:
