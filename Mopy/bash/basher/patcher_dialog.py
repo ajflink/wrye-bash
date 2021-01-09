@@ -315,9 +315,9 @@ class PatchDialog(DialogWindow):
         textDir = bass.dirs[u'patches']
         textDir.makedirs()
         #--File dialog
-        textPath = FileOpen.display_dialog(self.parent,
-            _(u'Import Bashed Patch configuration from:'),
-                textDir, config_dat, u'*.dat', mustExist=True)
+        textPath = FileOpen.display_dialog(self.parent, _(
+            u'Import Bashed Patch configuration from:'), textDir, config_dat,
+            u'*.dat')
         if not textPath: return
         table = bolt.DataTable(bolt.PickleDict(textPath))
         # try the current Bashed Patch mode.
