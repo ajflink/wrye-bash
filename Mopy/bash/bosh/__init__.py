@@ -134,6 +134,14 @@ class ListInfo(object):
             return (_(u'Bad extension or file root: ') + name_str), None, None
         return GPath(name_str), maPattern.groups(u'')[0], num_str # default u''
 
+    # Gui renaming stuff ------------------------------------------------------
+    @classmethod
+    def rename_area_idxs(cls, text_str):
+        """Return the selection span of item being renamed - usually to
+        exclude the extension."""
+        if cls._valid_exts_re:
+            return 0, len(GPath(text_str).sbody)
+
 class MasterInfo(object):
     """Slight abstraction over ModInfo that allows us to represent masters that
     are missing an active mod counterpart."""
