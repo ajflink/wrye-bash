@@ -44,7 +44,7 @@ from .balt import Progress
 from .bass import dirs, inisettings
 from .bolt import GPath, decoder, deprint, csvFormat, floats_equal, \
     setattr_deep, attrgetter_cache, struct_unpack, struct_pack
-from .brec import MreRecord, MelObject, genFid, RecHeader
+from .brec import MreRecord, genFid, RecHeader, null3
 from .exception import AbstractError
 from .mod_files import ModFile, LoadFactory
 
@@ -1283,7 +1283,14 @@ class _UsesEffectsMixin(_HandleAliases):
                                                        _coerce(actorvalue,int))
             if None in (eff_name,magnitude,area,duration,range_,actorvalue):
                 continue
-            effect = [eff_name,magnitude,area,duration,range_,actorvalue]
+            effect = MreRecord.type_class[b'SPELL'].get_mel_object_for_group(u'effects')
+            effect.effect_sig = eff_name.encode(u'ascii') ## FIXME tttt
+            effect.magnitude = magnitude
+            effect.area = area
+            effect.duration = duration
+            effect.recipient = range_ ## FIXME tttt
+            effect.actorValue = actorvalue
+            # script effect
             semod = _coerce(semod, unicode, AllowNone=True)
             seobj = _coerce(seobj, int, 16, AllowNone=True)
             seschool = _coerce(seschool, unicode, AllowNone=True)
@@ -1304,10 +1311,17 @@ class _UsesEffectsMixin(_HandleAliases):
             seflags = _coerce(seflags, int, AllowNone=True)
             sename = _coerce(sename, unicode, AllowNone=True)
             if None in (semod,seobj,seschool,sevisual,seflags,sename):
-                effect.append([])
+                pass
             else:
-                effect.append([(self._get_alias(semod), seobj),
-                               seschool, sevisual, seflags, sename])
+                # se = effect.scriptEffect ??
+                scriptEffect = MreRecord.type_class[b'SPELL'].get_mel_object_for_group(
+                    u'effects.scriptEffect')
+                scriptEffect.full = sename
+                scriptEffect.script = self._get_alias(semod), seobj #self._coerce_fid(semod, seobj)
+                scriptEffect.school = seschool
+                scriptEffect.visual = sevisual
+                scriptEffect.flags = seflags
+                effect.scriptEffect = scriptEffect
             effects.append(effect)
         return effects
 
@@ -1320,14 +1334,18 @@ class _UsesEffectsMixin(_HandleAliases):
         noscriptEffectFiller = u',"None","None","None","None","None","None"'
         output = []
         for effect in effects:
-            efname,magnitude,area,duration,range_,actorvalue = effect[:-1]
+            efname, magnitude, area, duration, range_, actorvalue = \
+                effect.effect_sig.decode(u'ascii'), effect.magnitude, \
+                effect.area, effect.duration, effect.recipient, \
+                effect.actorValue
             range_ = recipientTypeNumber_Name.get(range_,range_)
             actorvalue = actorValueNumber_Name.get(actorvalue,actorvalue)
-            scripteffect = effect[-1]
             output.append(effectFormat % (
                 efname,magnitude,area,duration,range_,actorvalue))
-            if len(scripteffect):
-                longid,seschool,sevisual,seflags,sename = scripteffect
+            if effect.scripteffect.longid: ## FIXME how we check for null script effect
+                se = effect.scriptEffect
+                longid, seschool, sevisual, seflags, sename = \
+                    se.script, se.school,se.visual, se.flags, se.full
                 if sevisual == u'\x00\x00\x00\x00':
                     sevisual = u'NONE'
                 seschool = schoolTypeNumber_Name.get(seschool,seschool)
@@ -1389,44 +1407,20 @@ class SigilStoneDetails(_UsesEffectsMixin):
         for record in modFile.tops[b'SGST'].getActiveRecords():
             newStats = fid_stats.get(record.fid, None)
             if not newStats: continue
-            effects = []
             for effect in record.effects:
-                effectlist = [effect.effect_sig,effect.magnitude,effect.area,
-                              effect.duration,effect.recipient,
-                              effect.actorValue]
                 if effect.scriptEffect:
-                    effectlist.append([effect.scriptEffect.script,
-                                       effect.scriptEffect.school,
-                                       effect.scriptEffect.visual,
-                                       effect.scriptEffect.flags.hostile,
-                                       effect.scriptEffect.full])
-                else: effectlist.append([])
-                effects.append(effectlist)
+                    effect.scriptEffect.unused1 = null3
             oldStats = [record.eid,record.full,record.model.modPath,
                         round(record.model.modb,6),record.iconPath,
                         record.script,record.uses,record.value,
-                        round(record.weight,6),effects]
+                        round(record.weight,6), record.effects]
             if oldStats != newStats:
                 changed.append(oldStats[0]) #eid
                 record.eid,record.full,record.model.modPath,\
                 record.model.modb,record.iconPath,script,record.uses,\
                 record.value,record.weight,effects = newStats
                 record.script = script
-                record.effects = []
-                for effect in effects:
-                    neweffect = record.get_mel_object_for_group(u'effects')
-                    neweffect.effect_sig,neweffect.magnitude,neweffect.area,\
-                    neweffect.duration,neweffect.recipient,\
-                    neweffect.actorValue,scripteffect = effect
-                    if len(scripteffect):
-                        scriptEffect = record.get_mel_object_for_group(
-                            u'effects.scriptEffect')
-                        script,scriptEffect.school,scriptEffect.visual,\
-                        scriptEffect.flags.hostile,scriptEffect.full = \
-                            scripteffect
-                        scriptEffect.script = script
-                        neweffect.scriptEffect = scriptEffect
-                    record.effects.append(neweffect)
+                record.effects = effects
                 record.setChanged()
         if changed: modFile.safeSave()
         return changed
@@ -1574,20 +1568,10 @@ class SpellRecords(_UsesEffectsMixin):
             fid_stats[record.fid] = [__attrgetters[attr](record) for attr in
                                      attrs]
             if detailed:
-                effects = []
                 for effect in record.effects:
-                    effectlist = [effect.effect_sig,effect.magnitude,effect.area,
-                                  effect.duration,effect.recipient,
-                                  effect.actorValue]
                     if effect.scriptEffect:
-                        effectlist.append([effect.scriptEffect.script,
-                                           effect.scriptEffect.school,
-                                           effect.scriptEffect.visual,
-                                           effect.scriptEffect.flags.hostile,
-                                           effect.scriptEffect.full])
-                    else: effectlist.append([])
-                    effects.append(effectlist)
-                fid_stats[record.fid].append(effects)
+                        effect.scriptEffect.unused1 = null3
+                fid_stats[record.fid].append(record.effects)
 
     def writeToMod(self, modInfo, __attrgetters=attrgetter_cache):
         """Writes stats to specified mod."""
@@ -1600,41 +1584,16 @@ class SpellRecords(_UsesEffectsMixin):
             if not newStats: continue
             oldStats = [__attrgetters[attr](record) for attr in attrs]
             if detailed:
-                effects = []
                 for effect in record.effects:
-                    effectlist = [effect.effect_sig,effect.magnitude,effect.area,
-                                  effect.duration,effect.recipient,
-                                  effect.actorValue]
                     if effect.scriptEffect:
-                        effectlist.append([effect.scriptEffect.script,
-                                           effect.scriptEffect.school,
-                                           effect.scriptEffect.visual,
-                                           effect.scriptEffect.flags.hostile,
-                                           effect.scriptEffect.full])
-                    else: effectlist.append([])
-                    effects.append(effectlist)
-                oldStats.append(effects)
+                        effect.scriptEffect.unused1 = null3
+                oldStats.append(record.effects)
             if oldStats != newStats:
                 changed.append(oldStats[0]) #eid
                 for attr, value in izip(attrs, newStats):
                     setattr_deep(record, attr, value)
                 if detailed and len(newStats) > len(attrs):
-                    effects = newStats[-1]
-                    record.effects = []
-                    for effect in effects:
-                        neweffect = record.get_mel_object_for_group(u'effects')
-                        neweffect.effect_sig,neweffect.magnitude,neweffect.area,\
-                        neweffect.duration,neweffect.recipient,\
-                        neweffect.actorValue,scripteffect = effect
-                        if len(scripteffect):
-                            scriptEffect = record.get_mel_object_for_group(
-                                u'effects.scriptEffect')
-                            script,scriptEffect.school,scriptEffect.visual,\
-                            scriptEffect.flags.hostile,scriptEffect.full = \
-                                scripteffect
-                            scriptEffect.script = script
-                            neweffect.scriptEffect = scriptEffect
-                        record.effects.append(neweffect)
+                    record.effects = newStats[-1]
                 record.setChanged()
         if changed: modFile.safeSave()
         return changed
@@ -1785,44 +1744,20 @@ class IngredientDetails(_UsesEffectsMixin):
         for record in modFile.tops[b'INGR'].getActiveRecords():
             newStats = fid_stats.get(record.fid, None)
             if not newStats: continue
-            effects = []
             for effect in record.effects:
-                effectlist = [effect.effect_sig,effect.magnitude,effect.area,
-                              effect.duration,effect.recipient,
-                              effect.actorValue]
                 if effect.scriptEffect:
-                    effectlist.append([effect.scriptEffect.script,
-                                       effect.scriptEffect.school,
-                                       effect.scriptEffect.visual,
-                                       effect.scriptEffect.flags.hostile,
-                                       effect.scriptEffect.full])
-                else: effectlist.append([])
-                effects.append(effectlist)
+                    effect.scriptEffect.unused1 = null3
             oldStats = [record.eid,record.full,record.model.modPath,
                         round(record.model.modb,6),record.iconPath,
                         record.script, record.value,
-                        round(record.weight,6),effects]
+                        round(record.weight,6),record.effects]
             if oldStats != newStats:
                 changed.append(oldStats[0]) #eid
                 record.eid,record.full,record.model.modPath,\
                 record.model.modb,record.iconPath,script,record.value,\
                 record.weight,effects = newStats
                 record.script = script
-                record.effects = []
-                for effect in effects:
-                    neweffect = record.get_mel_object_for_group(u'effects')
-                    neweffect.effect_sig,neweffect.magnitude,neweffect.area,\
-                    neweffect.duration,neweffect.recipient,\
-                    neweffect.actorValue,scripteffect = effect
-                    if len(scripteffect):
-                        scriptEffect = record.get_mel_object_for_group(
-                            u'effects.scriptEffect')
-                        script,scriptEffect.school,scriptEffect.visual,\
-                        scriptEffect.flags.hostile.hostile,scriptEffect.full\
-                            = scripteffect
-                        scriptEffect.script = script
-                        neweffect.scriptEffect = scriptEffect
-                    record.effects.append(neweffect)
+                record.effects = newStats[-1]
                 record.setChanged()
         if changed: modFile.safeSave()
         return changed
