@@ -473,6 +473,7 @@ class ActorFactions(_AParser):
 
     def __init__(self):
         super(ActorFactions, self).__init__()
+        self.id_stored_info = defaultdict(lambda : defaultdict(list))
         a_types = bush.game.actor_types
         # We don't need the first pass if we're used by the parser
         self._fp_types = (a_types + (b'FACT',) if not self.called_from_patcher
@@ -510,7 +511,11 @@ class ActorFactions(_AParser):
         aid = self._coerce_fid(amod, aobj)
         fid = self._coerce_fid(fmod, fobj)
         rank = int(rank)
-        self.id_stored_info[top_grup.encode(u'ascii')][aid][fid] = rank
+        top_grup_sig = top_grup.encode(u'ascii')
+        ret_obj = MreRecord.type_class[top_grup_sig].get_mel_object_for_group(u'factions')
+        ret_obj.faction = fid
+        ret_obj.rank = rank
+        self.id_stored_info[top_grup_sig][aid].append(ret_obj)
 
     def _write_rows(self, out):
         """Exports faction data to specified text file."""

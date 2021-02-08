@@ -311,16 +311,10 @@ class ImportActorsFactionsPatcher(_APreserver):
         fact_parser = super(
             ImportActorsFactionsPatcher, self)._parse_csv_sources(progress)
         # Turn the faction lists into lists of MelObjects
-        def make_obj(csv_rsig, csv_obj):
-            obj_faction, obj_rank = csv_obj
-            ret_obj = MreRecord.type_class[csv_rsig].get_mel_object_for_group(u'factions')
-            ret_obj.faction = obj_faction
-            ret_obj.rank = obj_rank
-            return ret_obj
         self._process_csv_sources(
-            {r: {f: {u'factions': [make_obj(r, o) for o in a.iteritems()]}
-                 for f, a in d.iteritems()}
-             for r, d in fact_parser.id_stored_info.iteritems()})
+            {gsig: {aid: {u'factions': a}
+                 for aid, a in d.iteritems()}
+             for gsig, d in fact_parser.id_stored_info.iteritems()})
 
 #------------------------------------------------------------------------------
 class ImportDestructiblePatcher(_APreserver):
