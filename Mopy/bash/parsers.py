@@ -197,6 +197,19 @@ class _HandleAliases(CsvParser):
     def _load_factory(self, keepAll=True, target_types=None):
         return LoadFactory(keepAll, by_sig=target_types or self.types)
 
+    def readFromMod(self, modInfo):
+        """Hasty readFromMod implementation."""
+        modFile = self._load_plugin(modInfo, keepAll=False)
+        for top_grup_sig in self.types:
+            typeBlock = modFile.tops.get(top_grup_sig)
+            if not typeBlock: continue
+            id_data = self.id_stored_info[top_grup_sig]
+            for record in typeBlock.getActiveRecords():
+                self._read_record(record, id_data)
+
+    def _read_record(self, record, id_data):
+        raise AbstractError
+
 # TODO(inf) Once refactoring is done, we could easily take in Progress objects
 #  for more accurate progress bars when importing/exporting
 class _AParser(_HandleAliases):
@@ -610,7 +623,7 @@ class EditorIds(_HandleAliases):
         super(EditorIds, self).__init__(aliases_)
         self.badEidsList = badEidsList
         self.questionableEidsSet = questionableEidsSet
-        self.type_id_eid = defaultdict(dict) #--eid = eids[type][longid]
+        self.id_stored_info = defaultdict(dict) #--eid = eids[type][longid]
         self.old_new = {}
         if types:
             self.types = types
@@ -618,22 +631,15 @@ class EditorIds(_HandleAliases):
             self.types = set(MreRecord.simpleTypes)
             self.types.discard(b'CELL')
 
-    def readFromMod(self,modInfo):
-        """Imports eids from specified mod."""
-        modFile = self._load_plugin(modInfo, keepAll=False)
-        for top_grup_sig in self.types:
-            typeBlock = modFile.tops.get(top_grup_sig)
-            if not typeBlock: continue
-            id_eid = self.type_id_eid[top_grup_sig]
-            for record in typeBlock.getActiveRecords():
-                if record.eid: id_eid[record.fid] = record.eid
+    def _read_record(self, record, id_data):
+        if record.eid: id_data[record.fid] = record.eid
 
     def writeToMod(self,modInfo):
         """Exports eids to specified mod."""
         modFile = self._load_plugin(modInfo)
         changed = []
         for type_ in self.types:
-            id_eid = self.type_id_eid.get(type_, None)
+            id_eid = self.id_stored_info.get(type_, None)
             typeBlock = modFile.tops.get(type_, None)
             if not id_eid or not typeBlock: continue
             for record in typeBlock.records:
@@ -705,10 +711,10 @@ class EditorIds(_HandleAliases):
         #--Explicit old to new def? (Used for script updating.)
         if len(csv_fields) > 4:
             self.old_new[_coerce(csv_fields[4], unicode).lower()] = eid
-        self.type_id_eid[top_grup.encode(u'ascii')][longid] = eid
+        self.id_stored_info[top_grup.encode(u'ascii')][longid] = eid
 
     def _write_rows(self, out):
-        for top_grup_sig, id_eid in _key_sort(self.type_id_eid):
+        for top_grup_sig, id_eid in _key_sort(self.id_stored_info):
             for id_, eid_ in _key_sort(id_eid, by_value=True):
                 out.write(self._row_fmt_str % (
                     top_grup_sig.decode(u'ascii'), id_[0], id_[1], eid_))
@@ -855,29 +861,20 @@ class FullNames(_HandleAliases):
     def __init__(self, types=None, aliases_=None):
         super(FullNames, self).__init__(aliases_)
         #--(eid,name) = type_id_name[type][longid]
-        self.type_id_name = defaultdict(dict)
+        self.id_stored_data = defaultdict(dict)
         self.types = types or bush.game.namesTypes
 
-    def readFromMod(self,modInfo):
-        """Imports type_id_name from specified mod."""
-        type_id_name= self.type_id_name
-        modFile = self._load_plugin(modInfo, keepAll=False)
-        for type_ in self.types:
-            typeBlock = modFile.tops.get(type_,None)
-            if not typeBlock: continue
-            id_name = type_id_name[type_]
-            for record in typeBlock.getActiveRecords():
-                longid = record.fid
-                full = record.full or (type_ == b'LIGH' and u'NO NAME')
-                if record.eid and full:
-                    id_name[longid] = (record.eid,full)
+    def _read_record(self, record, id_data):
+        full = record.full or (record.rec_sig == b'LIGH' and u'NO NAME')
+        if record.eid and full:
+            id_data[record.fid] = (record.eid, full)
 
     def writeToMod(self,modInfo):
         """Exports type_id_name to specified mod."""
         modFile = self._load_plugin(modInfo)
         changed = {}
         for type_ in self.types:
-            id_name = self.type_id_name.get(type_, None)
+            id_name = self.id_stored_data.get(type_, None)
             typeBlock = modFile.tops.get(type_,None)
             if not id_name or not typeBlock: continue
             for record in typeBlock.records:
@@ -896,11 +893,11 @@ class FullNames(_HandleAliases):
         longid = self._coerce_fid(mod, objectIndex)
         eid = _coerce(eid, unicode, AllowNone=True)
         full = _coerce(full, unicode, AllowNone=True)
-        self.type_id_name[top_grup.encode(u'ascii')][longid] = (eid, full)
+        self.id_stored_data[top_grup.encode(u'ascii')][longid] = (eid, full)
 
     def _write_rows(self, out):
         """Exports type_id_name to specified text file."""
-        for top_grup_sig, id_name in _key_sort(self.type_id_name):
+        for top_grup_sig, id_name in _key_sort(self.id_stored_data):
             for longid, (eid, rec_name) in _key_sort(id_name, keys_dex=[0],
                                                      values_dex=[0]):
                 out.write(self._row_fmt_str % (top_grup_sig.decode(u'ascii'),
