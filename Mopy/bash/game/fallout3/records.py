@@ -731,10 +731,7 @@ class MreCell(MelRecord):
         MelBase(b'IMPF','footstepMaterials'), #--todo rewrite specific class.
         MelFid(b'LTMP','lightTemplate'),
         MelOptUInt32Flags(b'LNAM', u'lightInheritFlags', inheritFlags),
-        # GECK default for water is -2147483648, but by setting default here to
-        # -2147483649, we force the Bashed Patch to retain the value of the
-        # last mod.
-        MelOptFloat(b'XCLW', u'waterHeight', -2147483649),
+        MelFloat(b'XCLW', u'waterHeight'),
         MelString(b'XNAM','waterNoiseTexture'),
         MelFidList(b'XCLR','regions'),
         MelFid(b'XCIM','imageSpace'),

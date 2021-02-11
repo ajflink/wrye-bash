@@ -1792,7 +1792,7 @@ class MreCell(MelRecord):
         # leftover flags, they are now in XCLC
         MelBase(b'LNAM','unknown_LNAM'),
         # Drop in interior cells for Skyrim, see #302 for discussion on this
-        MelSkipInterior(MelOptFloat(b'XCLW', u'waterHeight', -2147483649)),
+        MelSkipInterior(MelFloat(b'XCLW', u'waterHeight')),
         MelString(b'XNAM','waterNoiseTexture'),
         MelFidList(b'XCLR','regions'),
         MelFid(b'XLCN','location',),
