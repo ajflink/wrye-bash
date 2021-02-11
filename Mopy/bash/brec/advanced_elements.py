@@ -438,8 +438,7 @@ class MelTruncatedStruct(MelStruct):
         self._all_unpackers = {
             structs_cache[alt_fmt].size: structs_cache[alt_fmt].unpack for
             alt_fmt in old_versions}
-        self._all_unpackers[structs_cache[sub_fmt].size] = structs_cache[
-            sub_fmt].unpack
+        self._all_unpackers[self._static_size] = self._unpacker
 
     def load_mel(self, record, ins, sub_type, size_, *debug_strs):
         # Try retrieving the format - if not possible, wrap the error to make
@@ -478,8 +477,7 @@ class MelTruncatedStruct(MelStruct):
                     break
             else:
                 return None
-        return super(MelTruncatedStruct, self).pack_subrecord_data(
-            record)
+        return super(MelTruncatedStruct, self).pack_subrecord_data(record)
 
     @property
     def static_size(self):
@@ -494,6 +492,10 @@ class MelLists(MelStruct):
     'actions' is discarded"""
     # map attribute names to slices/indexes of the tuple of unpacked elements
     _attr_indexes = OrderedDict() # type: OrderedDict[unicode, slice | int]
+
+    @staticmethod
+    def _expand_formats(elements, expanded_fmts):
+        return [0] * len(elements)
 
     def load_mel(self, record, ins, sub_type, size_, *debug_strs):
         unpacked = list(ins.unpack(self._unpacker, size_, *debug_strs))
