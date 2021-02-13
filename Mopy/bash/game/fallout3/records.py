@@ -124,7 +124,7 @@ class MelConditions(MelGroups):
     def __init__(self):
         # Note that reference can be a fid - handled in MelCtdaFo3.mapFids
         super(MelConditions, self).__init__(u'conditions',
-            MelCtdaFo3(suffix_fmt=u'2I',
+            MelCtdaFo3(suffix_fmt=[u'2I'],
                        suffix_elements=[u'runOn', u'reference'],
                        old_suffix_fmts={u'I', u''}))
 
@@ -1108,7 +1108,9 @@ class MreEfsh(MelRecord):
         MelIco2(u'particleTexture'),
         MelString(b'NAM7', u'holesTexture'),
         MelTruncatedStruct(b'DATA',
-            u'B3s3I3Bs9f3Bs8f5I19f3Bs3Bs3Bs11fI5f3Bsf2I6f', (_flags, u'flags'),
+            [u'B', u'3s', u'3I', u'3B', u's', u'9f', u'3B', u's', u'8f', u'5I',
+             u'19f', u'3B', u's', u'3B', u's', u'3B', u's', u'11f', u'I',
+             u'5f', u'3B', u's', u'f', u'2I', u'6f'], (_flags, u'flags'),
             u'unused1', (u'memSBlend', 5), (u'memBlendOp', 1),
             (u'memZFunc', 3), u'fillRed', u'fillGreen', u'fillBlue',
             u'unused2', u'fillAIn', u'fillAFull', u'fillAOut',
@@ -1344,7 +1346,7 @@ class MreIdlm(MelRecord):
         MelBounds(),
         MelUInt8Flags(b'IDLF', u'flags', _flags),
         MelPartialCounter(MelTruncatedStruct(
-            b'IDLC', 'B3s', 'animation_count', 'unused',
+            b'IDLC', [u'B', u'3s'], 'animation_count', 'unused',
             old_versions={'B'}),
             counter='animation_count', counts='animations'),
         MelFloat(b'IDLT', 'idleTimerSetting'),
@@ -1590,7 +1592,7 @@ class MreIpds(MelRecord):
     melSet = MelSet(
         MelEdid(),
         MelTruncatedStruct(
-            b'DATA', '12I', (FID, u'stone'), (FID, u'dirt'),
+            b'DATA', [u'12I'], (FID, u'stone'), (FID, u'dirt'),
             (FID, u'grass'), (FID, u'glass'), (FID, u'metal'),
             (FID, u'wood'), (FID, u'organic'), (FID, u'cloth'),
             (FID, u'water'), (FID, u'hollowMetal'), (FID, u'organicBug'),
@@ -2611,7 +2613,7 @@ class MreRefr(MelRecord):
         ##: I dropped special handling here, looks like a regular truncated
         # record to me - but no way to test since we don't load this yet
         MelTruncatedStruct(
-            b'XLOC', 'B3sI4sB3s4s', 'lockLevel', 'unused1',
+            b'XLOC', [u'B', u'3s', u'I', u'4s', u'B', u'3s', u'4s'], 'lockLevel', 'unused1',
             (FID, 'lockKey'), 'unused2', (_lockFlags, 'lockFlags'),
             'unused3', 'unused4', is_optional=True,
             old_versions={'B3sI4s'}),
