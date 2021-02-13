@@ -103,7 +103,7 @@ class MelBipedObjectData(MelStruct):
     ))
 
     def __init__(self):
-        super(MelBipedObjectData, self).__init__(b'BOD2', u'2I',
+        super(MelBipedObjectData, self).__init__(b'BOD2', [u'2I'],
             (MelBipedObjectData._bp_flags, u'biped_flags'),
             (MelBipedObjectData.ArmorTypeFlags, u'armorFlags'))
 
@@ -162,7 +162,7 @@ class MelCoed(MelOptStruct):
     NPC then it is followed by a FormID.  If owner is a faction then it is
     followed by an signed integer or '=Iif' instead of '=IIf' """ # see #282
     def __init__(self):
-        MelOptStruct.__init__(self,b'COED','=IIf',(FID,'owner'),(FID,'glob'),
+        MelOptStruct.__init__(self,b'COED', [u'I', u'I', u'f'],(FID,'owner'),(FID,'glob'),
                               'itemCondition')
 
 #------------------------------------------------------------------------------
@@ -282,13 +282,13 @@ class MelLocation(MelUnion):
     """A PLDT/PLVD (Location) subrecord. Occurs in PACK and FACT."""
     def __init__(self, sub_sig):
         super(MelLocation, self).__init__({
-            (0, 1, 4, 6): MelOptStruct(sub_sig, u'iIi', u'location_type',
+            (0, 1, 4, 6): MelOptStruct(sub_sig, [u'i', u'I', u'i'], u'location_type',
                 (FID, u'location_value'), u'location_radius'),
-            (2, 3, 7, 10, 11, 12): MelOptStruct(sub_sig, u'i4si',
+            (2, 3, 7, 10, 11, 12): MelOptStruct(sub_sig, [u'i', u'4s', u'i'],
                 u'location_type', u'location_value', u'location_radius'),
-            5: MelOptStruct(sub_sig, u'iIi', u'location_type',
+            5: MelOptStruct(sub_sig, [u'i', u'I', u'i'], u'location_type',
                 u'location_value', u'location_radius'),
-            (8, 9): MelOptStruct(sub_sig, u'3i', u'location_type',
+            (8, 9): MelOptStruct(sub_sig, [u'3i'], u'location_type',
                 u'location_value', u'location_radius'),
             }, decider=PartialLoadDecider(
                 loader=MelSInt32(sub_sig, u'location_type'),
@@ -335,10 +335,10 @@ class MelSMFlags(MelStruct):
     ))
 
     def __init__(self, with_quest_flags=False):
-        sm_fmt = u'I'
+        sm_fmt = [u'I']
         sm_elements = [(self._node_flags, u'node_flags')]
         if with_quest_flags:
-            sm_fmt = u'2H'
+            sm_fmt = [u'2H']
             sm_elements.append((self._quest_flags, u'quest_flags'))
         super(MelSMFlags, self).__init__(b'DNAM', sm_fmt, *sm_elements)
 
@@ -363,7 +363,8 @@ class MelSpit(MelStruct):
     ))
 
     def __init__(self):
-        super(MelSpit, self).__init__(b'SPIT', u'3If2I2fI', u'cost',
+        super(MelSpit, self).__init__(b'SPIT',
+            [u'3I', u'f', u'2I', u'2f', u'I'], u'cost',
             (MelSpit.spit_flags, u'dataFlags'), u'spellType', u'chargeTime',
             u'castType', u'targetType', u'castDuration', u'range',
             (FID, u'halfCostPerk'))
@@ -3042,8 +3043,9 @@ class MreLgtm(MelRecord):
 
     melSet = MelSet(
         MelEdid(),
-        MelLgtmData(
-            b'DATA', '3Bs3Bs3Bs2f2i3f32s3Bs3f4s', 'redLigh', 'greenLigh',
+        MelLgtmData(b'DATA',
+            [u'3B', u's', u'3B', u's', u'3B', u's', u'2f', u'2i', u'3f',
+             u'32s', u'3B', u's', u'3f', u'4s'], 'redLigh', 'greenLigh',
             'blueLigh','unknownLigh', 'redDirect', 'greenDirect', 'blueDirect',
             'unknownDirect', 'redFog', 'greenFog', 'blueFog', 'unknownFog',
             'fogNear', 'fogFar', 'dirRotXY', 'dirRotZ', 'directionalFade',
@@ -3330,8 +3332,9 @@ class MreMgef(MelRecord):
         MelFull(),
         MelMdob(),
         MelKeywords(),
-        MelPartialCounter(MelStruct(
-            b'DATA', u'IfI2iH2sIf4I4fIi4Ii3IfIf7I2f',
+        MelPartialCounter(MelStruct(b'DATA',
+            [u'I', u'f', u'I', u'2i', u'H', u'2s', u'I', u'f', u'4I', u'4f',
+             u'I', u'i', u'4I', u'i', u'3I', u'f', u'I', u'f', u'7I', u'2f'],
             (MgefGeneralFlags, u'flags'), u'base_cost',
             (FID, u'associated_item'), u'magic_skill', u'resist_value',
             u'counter_effect_count', u'unused1', (FID, u'light'),
@@ -4617,8 +4620,8 @@ class MreRegn(MelRecord):
             )),
             MelRegnEntrySubrecord(4, MelString(b'RDMP', 'mapName')),
             MelRegnEntrySubrecord(2, MelArray('objects',
-                MelStruct(
-                    b'RDOT', 'IH2sf4B2H5f3H2s4s', (FID, 'objectId'),
+                MelStruct(b'RDOT',
+                    [u'I', u'H', u'2s', u'f', u'4B', u'2H', u'5f', u'3H', u'2s', u'4s'], (FID, 'objectId'),
                     'parentIndex', 'unk1', 'density', 'clustering',
                     'minSlope', 'maxSlope', (obflags, 'flags'),
                     'radiusWRTParent', 'radius', 'minHeight', 'maxHeight',
@@ -5369,12 +5372,12 @@ class MreWeap(MelRecord):
                   u'rumbleDuration', u'dnamUnk5', u'skill',
                   u'dnamUnk6', u'resist', u'dnamUnk7', u'stagger'),
         MelIsSSE(
-            le_version=MelStruct(
-                b'CRDT', u'H2sfB3sI', u'critDamage', u'crdtUnk1',
+            le_version=MelStruct(b'CRDT',
+                [u'H', u'2s', u'f', u'B', u'3s', u'I'], u'critDamage', u'crdtUnk1',
                 u'criticalMultiplier', (WeapFlags3, u'criticalFlags'),
                 u'crdtUnk2', (FID, u'criticalEffect')),
-            se_version=MelWeapCrdt(
-                b'CRDT', u'H2sfB3s4sI4s', u'critDamage', u'crdtUnk1',
+            se_version=MelWeapCrdt(b'CRDT',
+                [u'H', u'2s', u'f', u'B', u'3s', u'4s', u'I', u'4s'], u'critDamage', u'crdtUnk1',
                 u'criticalMultiplier', (WeapFlags3, u'criticalFlags'),
                 u'crdtUnk2', u'crdtUnk3',
                 (FID, u'criticalEffect'), u'crdtUnk4',
@@ -5591,7 +5594,7 @@ class MreWthr(MelRecord):
                   (FID, 'image_space_day'), (FID, 'image_space_sunset'),
                   (FID, 'image_space_night'),),
         MelSSEOnly(MelOptStruct(
-            b'HNAM', '4I', (FID, 'volumetricLightingSunrise'),
+            b'HNAM', [u'4I'], (FID, 'volumetricLightingSunrise'),
             (FID, 'volumetricLightingDay'), (FID, 'volumetricLightingSunset'),
             (FID, 'volumetricLightingNight'))),
         MelGroups('wthrAmbientColors',

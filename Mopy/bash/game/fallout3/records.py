@@ -114,7 +114,7 @@ class MelBipedData(MelStruct):
     ), unknown_is_unused=True)
 
     def __init__(self):
-        super(MelBipedData, self).__init__(b'BMDT', u'IB3s',
+        super(MelBipedData, self).__init__(b'BMDT', [u'I', u'B', u'3s'],
             (self._biped_flags, u'biped_flags'),
             (self._general_flags, u'generalFlags'), u'biped_unused')
 
@@ -1479,17 +1479,17 @@ class MreImgs(MelRecord):
         u'cinematicBrightnessValue', u'cinematicTintRed',
         u'cinematicTintGreen', u'cinematicTintBlue', u'cinematicTintValue',
     ]
-
+    _dnam_fmts = [u'33f', u'4s', u'4s', u'4s', u'4s']
     melSet = MelSet(
         MelEdid(),
         MelUnion({
             152: MelStruct(
-                b'DNAM', u'33f4s4s4s4sB3s', *(_dnam_common + [
+                b'DNAM', _dnam_fmts + [u'B', u'3s'], *(_dnam_common + [
                     u'unused1', u'unused2', u'unused3', u'unused4',
                     (_dnam_flags, u'dnam_flags'), u'unused5',
                 ])),
             148: MelStruct(
-                b'DNAM', u'33f4s4s4s4s', *(_dnam_common + [
+                b'DNAM', _dnam_fmts, *(_dnam_common + [
                     u'unused1', u'unused2',
                     u'unused3', u'unused4',
                 ])),
@@ -1776,8 +1776,9 @@ class MreMgef(MelRecord):
         MelDescription(u'text'),
         MelIcon(),
         MelModel(),
-        MelPartialCounter(MelStruct(
-            b'DATA', u'IfI2iH2sIf6I2fIi', (_flags, u'flags'), u'base_cost',
+        MelPartialCounter(MelStruct(b'DATA',
+            [u'I', u'f', u'I', u'2i', u'H', u'2s', u'I', u'f', u'6I', u'2f',
+             u'I', u'i'], (_flags, u'flags'), u'base_cost',
             (FID, u'associated_item'), u'school', u'resist_value',
             u'counter_effect_count', u'unused1',
             (FID, u'light'), u'projectileSpeed', (FID, u'effectShader'),
@@ -2002,11 +2003,11 @@ class MreNpc(MreActor):
         MelStrings(b'KFFZ','animations'),
         MelFid(b'CNAM','iclass'),
         MelUnion({
-            11: _MelNpcData(u'=I7B'),
-            25: _MelNpcData(u'=I21B')
+            11: _MelNpcData([u'I', u'7B']),
+            25: _MelNpcData([u'I', u'21B'])
         }, decider=SizeDecider()),
         MelFids(b'PNAM','headParts'),
-        MelNpcDnam(b'DNAM', u'=28B', (u'skillValues', [0] * 14),
+        MelNpcDnam(b'DNAM', [u'28B'], (u'skillValues', [0] * 14),
                    (u'skillOffsets', [0] * 14)),
         MelFid(b'HNAM','hair'),
         MelFloat(b'LNAM', u'hairLength'),
@@ -2474,7 +2475,7 @@ class MreRace(MelRecord):
         MelFid(b'ONAM','Older'),
         MelFid(b'YNAM','Younger'),
         MelBase(b'NAM2','_nam2',b''),
-        MelRaceVoices(b'VTCK', '2I', (FID, 'maleVoice'), (FID, 'femaleVoice')),
+        MelRaceVoices(b'VTCK', [u'2I'], (FID, 'maleVoice'), (FID, 'femaleVoice')),
         MelOptStruct(b'DNAM', [u'2I'],(FID, u'defaultHairMale'),(FID, u'defaultHairFemale')),
         # Int corresponding to GMST sHairColorNN
         MelStruct(b'CNAM', [u'2B'],'defaultHairColorMale','defaultHairColorFemale'),
@@ -2698,8 +2699,9 @@ class MreRegn(MelRecord):
             MelStruct(b'RDAT', [u'I', u'2B', u'2s'], 'entryType', (rdatFlags, 'flags'),
                       'priority', 'unused1'),
             MelRegnEntrySubrecord(2, MelArray('objects',
-                MelStruct(
-                    b'RDOT', 'IH2sf4B2H5f3H2s4s', (FID, 'objectId'),
+                MelStruct(b'RDOT',
+                    [u'I', u'H', u'2s', u'f', u'4B', u'2H', u'5f', u'3H',
+                     u'2s', u'4s'], (FID, 'objectId'),
                     'parentIndex', 'unk1', 'density', 'clustering',
                     'minSlope', 'maxSlope', (obflags, 'flags'),
                     'radiusWRTParent', 'radius', 'minHeight', 'maxHeight',
@@ -3034,7 +3036,7 @@ class MreWatr(MelRecord):
         ('shininess', 100), ('reflectHdrMult', 1), ('lightRadius', 10000),
         ('lightBrightness', 1), ('noiseLayer1UvScale', 100),
         ('noiseLayer2UvScale', 100), ('noiseLayer3UvScale', 100)]
-
+    _fmts = [u'10f', u'3B', u's', u'3B', u's', u'3B', u's', u'I',]
     melSet = MelSet(
         MelEdid(),
         MelFull(),
@@ -3044,8 +3046,8 @@ class MreWatr(MelRecord):
         MelString(b'MNAM','material'),
         MelFid(b'SNAM','sound',),
         MelFid(b'XNAM','effect'),
-        MelWatrData(b'DATA','10f3Bs3Bs3BsI32fH', *(_els + ['damage'])),
-        MelWatrDnam(b'DNAM', '10f3Bs3Bs3BsI35f', *(
+        MelWatrData(b'DATA', _fmts + [u'32f', u'H'], *(_els + ['damage'])),
+        MelWatrDnam(b'DNAM', _fmts + [u'35f'], *(
                 _els + ['noiseLayer1Amp', 'noiseLayer2Amp', 'noiseLayer3Amp']),
                     old_versions={'10f3Bs3Bs3BsI32f'}),
         MelFidList(b'GNAM','relatedWaters'),

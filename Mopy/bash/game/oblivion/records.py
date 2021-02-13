@@ -156,7 +156,7 @@ class MelEffects(MelSequential):
         # OBME Elements -------------------------------------------------------
         self._obme_elements = [
             MelGroups(u'effects',
-                MelObme(b'EFME', extra_format=u'2B',
+                MelObme(b'EFME', extra_format=[u'2B'],
                         extra_contents=[u'efit_param_info',
                                         u'efix_param_info'],
                         reserved_byte_count=10),
@@ -347,8 +347,8 @@ class MelObme(MelOptStruct):
     """Oblivion Magic Extender subrecord. Prefixed every attribute with obme_
     both for easy grouping in debugger views and to differentiate them from
     vanilla attrs."""
-    def __init__(self, struct_sig=b'OBME', extra_format=u'',
-            extra_contents=None, reserved_byte_count=28):
+    def __init__(self, struct_sig=b'OBME', extra_format=[],
+                 extra_contents=None, reserved_byte_count=28):
         """Initializes a MelObme instance. Supports customization for the
         variations that exist for effects subrecords and MGEF records."""
         # Always begins with record version and OBME version - None here is on
@@ -363,9 +363,8 @@ class MelObme(MelOptStruct):
         struct_contents += extra_contents
         # Always ends with a statically sized reserved byte array
         struct_contents += [(u'obme_unused', null1 * reserved_byte_count)]
-        super(MelObme, self).__init__(
-            struct_sig, u'4B{}{}s'.format(extra_format, reserved_byte_count),
-            *struct_contents)
+        str_fmts =[ u'4B'] + extra_format +  [u'%ds' % reserved_byte_count]
+        super(MelObme, self).__init__(struct_sig, str_fmts, *struct_contents)
 
 #------------------------------------------------------------------------------
 class MelOwnershipTes4(brec.MelOwnership):
@@ -1288,7 +1287,7 @@ class MreMgef(MelRecord):
 
     melSet = MelSet(
         MelEdid(),
-        MelObme(extra_format=u'2B2s4sI4s', extra_contents=[
+        MelObme(extra_format=[u'2B', u'2s', u'4s', u'I', u'4s'], extra_contents=[
             u'obme_param_a_info', u'obme_param_b_info', u'obme_unused_mgef',
             u'obme_handler', (_obme_flag_overrides, u'obme_flag_overrides'),
             u'obme_param_b']),

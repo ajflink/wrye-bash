@@ -645,7 +645,7 @@ class MelOwnership(MelGroup):
 class MelDebrData(MelStruct):
     def __init__(self):
         # Format doesn't matter, struct.Struct(u'') works! ##: MelStructured
-        super(MelDebrData, self).__init__(b'DATA', u'', u'percentage',
+        super(MelDebrData, self).__init__(b'DATA', [], u'percentage',
             (u'modPath', null1), u'flags')
 
     @staticmethod
