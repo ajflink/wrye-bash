@@ -2007,7 +2007,7 @@ class SaveList(balt.UIList):
     def OnLabelEdited(self, is_edit_cancelled, evt_label, evt_index, evt_item):
         """Savegame renamed."""
         if is_edit_cancelled: return EventResult.FINISH # todo CANCEL?
-        newName, root, _numStr = \
+        newName, root = \
             self.panel.detailsPanel.file_info.validate_filename_str(evt_label)
         if not root:
             balt.showError(self, newName)
@@ -2382,7 +2382,7 @@ class InstallersList(balt.UIList):
         selected = self.GetSelected()
         # all selected have common type! enforced in OnBeginEditLabel
         renaming_type = type(self.data_store[selected[0]])
-        newName, root, _numStr = renaming_type.validate_filename_str(evt_label)
+        newName, root = renaming_type.validate_filename_str(evt_label)
         if root is None:
             balt.showError(self, newName)
             return EventResult.CANCEL
@@ -3294,17 +3294,16 @@ class ScreensList(balt.UIList):
     def OnLabelEdited(self, is_edit_cancelled, evt_label, evt_index, evt_item):
         """Rename selected screenshots."""
         if is_edit_cancelled: return EventResult.CANCEL
-        newName, root, numStr = \
-            self.panel.detailsPanel.file_info.validate_filename_str(
-                evt_label, has_digits=True)
-        if not (root or numStr):
-            balt.showError(self, newName)
-            return # allow for number only names
+        root, numStr = self.panel.detailsPanel.file_info.validate_filename_str(
+            evt_label)
+        if numStr is None: # allow for number only names
+            balt.showError(self, root)
+            return EventResult.CANCEL
         selected = self.GetSelected()
         #--Rename each screenshot, keeping the old extension
         num = int(numStr or  0)
         digits = len(u'%s' % (num + len(selected)))
-        if numStr: numStr.zfill(digits)
+        if numStr: numStr = numStr.zfill(digits)
         with BusyCursor():
             to_select = set()
             to_del = set()
